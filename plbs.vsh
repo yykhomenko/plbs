@@ -4,12 +4,16 @@ import os
 import strconv
 
 struct BenchResult {
-	name                  string
-	source_lines          u32
-	source_bytes          u32
-	source_bytes_per_line f32
-	bin_size              u32
-	duration              f32
+	name                         string
+	source_lines                 u32
+	source_size                  u32
+	source_size_per_line         f32
+	compile_size                 u32
+	compile_size_per_source_size f32
+	compile_duration             f32
+	run_cpu                      f32
+	run_memory                   f32
+	run_duration                 f32
 }
 
 fn sh(cmd string) os.Result {
@@ -33,7 +37,18 @@ programs := strs.first().split('=').last().split(' ')
 println(programs)
 // -------------------------------------------
 //
+// sh('cd data/plb2/src/v && make clean')
+// sh('cd data/plb2/src/v && make all')
+
+//
 for prog in programs {
+	lines := read_lines('data/plb2/src/v/${prog}.v') or { panic('v file is absent') }
+	source_lines := u32(lines.len)
+	source_size := u32(os.file_size('data/plb2/src/v/${prog}.v'))
+	source_size_per_line := f32(source_size) / source_lines
+	compile_size := u32(os.file_size('data/plb2/src/v/${prog}'))
+	compile_size_per_source_size := f32(compile_size) / f32(source_size)
+
 	output := sh('cd data/plb2/src/v && time ./${prog}').output
 	duration_str := output.split_into_lines().filter(fn (it string) bool {
 		return it.starts_with('real')
@@ -43,21 +58,19 @@ for prog in programs {
 	seconds_str := ms.last().split('s').first().trim_space()
 	minutes := strconv.atoi(minutes_str) or { panic('unable to parse minutes') }
 	seconds := strconv.atof64(seconds_str) or { panic('unable to parse seconds') }
-	duration := f32(minutes * 60 + seconds)
-
-	lines := read_lines('data/plb2/src/v/${prog}.v') or { panic('v file is absent') }
-	source_lines := u32(lines.len)
-	source_bytes := u32(os.file_size('data/plb2/src/v/${prog}.v'))
-	source_bytes_per_line := f32(source_bytes) / source_lines
-	bin_size := u32(os.file_size('data/plb2/src/v/${prog}'))
+	run_duration := f32(minutes * 60 + seconds)
 
 	b := BenchResult{
-		name:                  prog
-		source_lines:          source_lines
-		source_bytes:          source_bytes
-		source_bytes_per_line: source_bytes_per_line
-		bin_size:              bin_size
-		duration:              duration
+		name:                         prog
+		source_lines:                 source_lines
+		source_size:                  source_size
+		source_size_per_line:         source_size_per_line
+		compile_size:                 compile_size
+		compile_size_per_source_size: compile_size_per_source_size
+		compile_duration:             0
+		run_cpu:                      0
+		run_memory:                   0
+		run_duration:                 run_duration
 	}
 
 	println(b)
