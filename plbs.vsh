@@ -49,11 +49,10 @@ for prog in programs {
 	compile_size := u32(os.file_size('data/plb2/src/v/${prog}'))
 	compile_size_per_source_size := f32(compile_size) / f32(source_size)
 
-	output := sh('cd data/plb2/src/v && time ./${prog}').output
-	duration_str := output.split_into_lines().filter(fn (it string) bool {
-		return it.starts_with('real')
-	}).first().split('real').last().trim_space()
-	ms := duration_str.split('m')
+	ms := sh('cd data/plb2/src/v && time ./${prog}').output
+		.split_into_lines().filter(it.starts_with('real')).first()
+		.split('real').last().trim_space()
+		.split('m')
 	minutes_str := ms.first().trim_space()
 	seconds_str := ms.last().split('s').first().trim_space()
 	minutes := strconv.atoi(minutes_str) or { panic('unable to parse minutes') }
