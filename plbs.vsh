@@ -29,9 +29,7 @@ fn sh(cmd string) os.Result {
 // sh('git clone --depth=1 https://github.com/attractivechaos/plb2 data/plb2')
 rmdir_all('data/plb2/.git') or {}
 data := read_lines('data/plb2/src/v/Makefile') or { panic('v Makefile is absent') }
-strs := data.filter(fn (it string) bool {
-	return it.starts_with('EXE=')
-})
+strs := data.filter(it.starts_with('EXE='))
 programs := strs.first().split('=').last().split(' ')
 
 println(programs)
