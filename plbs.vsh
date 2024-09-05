@@ -1,4 +1,4 @@
-#!/usr/bin/env -S v -skip-unused -gc none
+#!/usr/bin/env -S v -skip-unused -gc none -prod
 
 import os
 import strconv
